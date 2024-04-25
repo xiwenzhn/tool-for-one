@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Processing Sketch</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden; /* Prevent scroll bars */
+      position: relative;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    @font-face {
+      font-family: 'DejaVuSansMono';
+      src: url('DejaVuSansMono.ttf') format('truetype');
+    }
+
+    .instructions-container {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      padding: 20px;
+      border: 2px solid black;
+      text-align: center;
+      font-family: 'DejaVuSansMono', sans-serif;
+      display: block;
+      transition: transform 0.3s ease; /* Add transition for smooth animation */
+    }
+
+    .arrow-icon {
+      position: absolute;
+      bottom: 220px; /* Adjust the position */
+      right: 30px;
+      cursor: pointer;
+      width: 30px; /* Adjust the width of the arrow */
+      z-index: 2; /* Set a higher z-index value */
+    }
+    .hidden {
+      transform: translateY(100%); /* Move the instructions box out of sight */
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <script>
+      let drawingPoints = [];
+      let drawing = false;
+      let framesAfterRelease = 0;
+      const gridSize = 30; // Adjust the size of the grid dots
+      let screenshotCount = 0; // Variable to keep track of screenshot count
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight); // Set canvas size to match window dimensions
+      }
+
+      function draw() {
+        background(255);
+
+        // Draw the grid of dots
+        drawGrid();
+
+        // Draw previous points
+        drawPreviousPoints();
+
+        // Draw denser clusters of pixels at snapped grid points
+        if (drawing) {
+          for (let point of drawingPoints) {
+            const pointSize = random(5, 40); // Adjust the size range as needed
+            const clusterSize = 40; // Adjust the cluster size as needed
+            for (let i = 0; i < clusterSize; i++) {
+              const offsetX = random(-pointSize / 2, pointSize / 2); // Adjust the randomness based on point size
+              const offsetY = random(-pointSize / 2, pointSize / 2);
+              drawCluster(roundToGrid(point.x + offsetX), roundToGrid(point.y + offsetY), pointSize);
+            }
+          }
+        }
+
+        // Introduce a delay of 100 milliseconds
+        // delay(5); // There's no delay function in p5.js, so we'll use setTimeout instead
+        setTimeout(() => {}, 5);
+      }
+
+      function drawPreviousPoints() {
+        for (let pointSet of drawingPoints) {
+          for (let point of pointSet) {
+            const pointSize = random(5, 40); // Adjust the size range as needed
+            const clusterSize = 40; // Adjust the cluster size as needed
+            for (let i = 0; i < clusterSize; i++) {
+              const offsetX = random(-pointSize / 2, pointSize / 2); // Adjust the randomness based on point size
+              const offsetY = random(-pointSize / 2, pointSize / 2);
+              drawCluster(roundToGrid(point.x + offsetX), roundToGrid(point.y + offsetY), pointSize);
+            }
+          }
+        }
+      }
+
+      function drawCluster(x, y, size) {
+        const clusterDensity = 10; // Adjust the cluster density as needed
+        for (let i = 0; i < clusterDensity; i++) {
+          const offsetX = random(-size / 2, size / 2); // Adjust the randomness based on point size
+          const offsetY = random(-size / 2, size / 2);
+          point(x + offsetX, y + offsetY);
+        }
+      }
+
+      function drawGrid() {
+        fill(0);
+        for (let x = 0; x < width; x += gridSize) {
+          for (let y = 0; y < height; y += gridSize) {
+            ellipse(x, y, 2, 2); // Draw a dot at each grid point
+          }
+        }
+      }
+
+      function roundToGrid(value) {
+        return gridSize * round(value / gridSize);
+      }
+
+      function mousePressed() {
+        drawing = true;
+        framesAfterRelease = 0; // Reset the frame counter when the mouse is pressed
+      }
+
+      function mouseReleased() {
+        drawing = false;
+        // if (drawingPoints.length > 1) {
+        //   organizePattern();
+        // }
+      }
+
+      function mouseDragged() {
+        if (drawing) {
+          const currentPoint = createVector(roundToGrid(mouseX), roundToGrid(mouseY));
+          drawingPoints.push([currentPoint]);
+        }
+      }
+
+      function keyPressed() {
+        // Save a screenshot and clear the canvas when the spacebar is pressed
+        if (key === ' ') {
+          saveScreenshot();
+        } else if (key === 'x') {
+          clearDrawing(); // Clear the drawing when the 'x' key is pressed
+        }
+      }
+
+      function saveScreenshot() {
+        const filename = "screenshot" + nf(screenshotCount, 3) + ".png"; // Use nf() to pad the count with zeros
+        saveCanvas(filename);
+        console.log("Screenshot saved as: " + filename);
+        screenshotCount++; // Increment the screenshot count
+      }
+
+      function clearDrawing() {
+        drawingPoints = []; // Clear the drawing points
+      }
+    </script>
+  </div>
+  <div class="instructions-container" id="instructionsContainer">
+    <strong>Instructions:</strong><br> <br> Draw with the mouse <br> 'X' key to clear the drawing <br>Spacebar to save the drawing <br><br> Remember to send me your drawing at 203-589-5339 <br>You can also airdrop or email
+  </div>
+  <img src="https://openmoji.org/php/download_asset.php?type=emoji&emoji_hexcode=2B07&emoji_variant=black" alt="Down arrow" class="arrow-icon" id="arrowIcon" onclick="toggleInstructions()">
+  <script>
+    function toggleInstructions() {
+      const instructions = document.getElementById('instructionsContainer');
+      instructions.classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>
