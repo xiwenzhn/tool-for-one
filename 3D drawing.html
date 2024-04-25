@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extruded Drawing</title>
+  <style>
+    @font-face {
+      font-family: 'DejaVuSansMono';
+      src: url('DejaVuSansMono.ttf') format('truetype');
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* Prevent scroll bars */
+    }
+    #sketch-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #instructions {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      padding: 10px;
+      border: 2px solid yellow;
+      font-family: 'DejaVuSansMono', sans-serif;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .arrow-icon {
+     position: absolute;
+      bottom: 200px; /* Adjust the position */
+      right: 30px;
+      cursor: pointer;
+      width: 30px; /* Adjust the width of the arrow */
+      z-index: 2; /* Set a higher z-index value */
+    }
+    canvas {
+      display: block;
+    }
+    .hidden {
+      transform: translateY(100%);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script>
+      let clusters;
+      let drawing = false;
+      let extruding = false;
+      let extrusionDepth = 100;
+      let clusterSize = 10;
+      let maxPoints = 100;
+      let numSteps = 50;
+      let rotx = 0;
+      let roty = 0;
+      let startTime;
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight, WEBGL);
+        clusters = [];
+      }
+
+      function draw() {
+        background(0);
+
+        if (drawing) {
+          draw2D();
+        } else if (extruding) {
+          rotateObject();
+          animateExtrusion();
+          extrude3D();
+        }
+      }
+
+      function draw2D() {
+        noFill();
+        stroke(255);
+        strokeWeight(2);
+
+        beginShape();
+        for (let cluster of clusters) {
+          for (let point of cluster) {
+            vertex(point.x, point.y);
+          }
+        }
+        endShape();
+      }
+
+      function animateExtrusion() {
+        if (clusters.length > 0) {
+          let numPoints = min(maxPoints, int(map(millis() - startTime, 0, 2000, 0, maxPoints)));
+          for (let cluster of clusters) {
+            if (cluster.length > 0) {
+              while (cluster.length < numPoints) {
+                let lastPoint = cluster[cluster.length - 1];
+                let newX = lastPoint.x + random(-5, 5);
+                let newY = lastPoint.y + random(-5, 5);
+                cluster.push(createVector(newX, newY));
+              }
+            }
+          }
+        }
+      }
+
+      function extrude3D() {
+        for (let cluster of clusters) {
+          for (let i = 0; i < cluster.length - 1; i++) {
+            let p1 = cluster[i];
+            let p2 = cluster[i + 1];
+            for (let j = 0; j < 10; j++) {
+              let t = map(j, 0, 9, 0, 1);
+              let x = lerp(p1.x, p2.x, t);
+              let y = lerp(p1.y, p2.y, t);
+              let z = map(j, 0, 9, -extrusionDepth / 2, extrusionDepth / 2);
+              let dotSize = random(0.1, 1);
+              push();
+              translate(x, y, z);
+              fill(255);
+              noStroke();
+              sphere(dotSize);
+              pop();
+            }
+          }
+        }
+      }
+
+      function mousePressed() {
+        drawing = true;
+        extruding = false;
+        clusters.push([]);
+      }
+
+      function mouseReleased() {
+        drawing = false;
+        extruding = true;
+        startTime = millis();
+      }
+
+      function keyPressed() {
+        if (key === 'x') {
+          clearDrawing();
+        } else if (key === ' ') {
+          saveScreenshot();
+        }
+      }
+
+      function clearDrawing() {
+        clusters = [];
+      }
+
+      function saveScreenshot() {
+        saveCanvas('drawing', 'png');
+      }
+
+      function mouseDragged() {
+        if (drawing) {
+          let currentPoint = createVector(mouseX - width / 2, mouseY - height / 2);
+          clusters[clusters.length - 1].push(currentPoint);
+
+          if (clusters[clusters.length - 1].length > clusterSize) {
+            clusters.push([]);
+          }
+        }
+      }
+
+      function rotateObject() {
+        rotx += radians((mouseY - pmouseY) * 0.5);
+        roty += radians((mouseX - pmouseX) * 0.5);
+        rotateX(rotx);
+        rotateY(roty);
+      }
+    </script>
+  </div>
+
+  <div id="instructions">
+    <strong>Instructions:</strong><br>
+    <br>Draw with the mouse<br>
+    <br>try rotating the mouse!<br>
+    'X' key to clear the drawing<br>
+    Spacebar to save the drawing<br><br>
+    Remember to send me your drawing at 203-589-5339<br>
+    You can also airdrop or email
+  </div>
+  <img src="https://openmoji.org/php/download_asset.php?type=emoji&emoji_hexcode=2B07&emoji_variant=black" alt="Down arrow" class="arrow-icon" onclick="toggleInstructions()">
+  <script>
+    function toggleInstructions() {
+      const instructions = document.getElementById('instructions');
+      instructions.classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>
