@@ -16,16 +16,16 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 3vh;
+      height: 100vh;
       font-family: 'DejaVuSansMono copy', sans-serif;
-      padding: 500px;
-
     }
     #container {
       text-align: center;
       border: 2px solid black;
       padding: 10px;
       font-size: 25px;
+      max-width: 50%;
+      transition: max-width 0.3s ease; /* Add transition for smooth resizing */
     }
     #message {
       font-size: 25px;
@@ -38,6 +38,13 @@
     #message a:hover {
       background-color: black;
       color: white !important;
+    }
+
+    /* Media query for smaller screen sizes */
+    @media screen and (max-width: 768px) {
+      #container {
+        max-width: 80%;
+      }
     }
   </style>
 </head>
